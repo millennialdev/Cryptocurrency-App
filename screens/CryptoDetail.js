@@ -5,7 +5,7 @@ import {
 	Text,
 	TouchableOpacity,
 	SafeAreaView,
-	Iamge,
+	Image,
 	ScrollView,
 	Animated,
 } from 'react-native';
@@ -17,7 +17,12 @@ import {
 } from 'victory-native';
 import { VictoryCustomTheme } from '../styles';
 import { dummyData, COLORS, SIZES, FONTS, icons } from '../constants';
-import { HeaderBar, CurrencyLabel } from '../components';
+import {
+	HeaderBar,
+	CurrencyLabel,
+	TextButton,
+	PriceAlert,
+} from '../components';
 
 const CryptoDetail = ({ route, navigation }) => {
 	const scrollX = new Animated.Value(0);
@@ -32,6 +37,137 @@ const CryptoDetail = ({ route, navigation }) => {
 		setSelectedCurrency(currency);
 	}, []);
 
+	function optionOnClickHandler(option) {
+		setSelectedOption(option);
+	}
+
+	function renderDots() {
+		const dotPosition = Animated.divide(scrollX, SIZES.width);
+
+		return (
+			<View style={{ height: 30, marginTop: 15 }}>
+				<View
+					style={{
+						flexDirection: 'row',
+						alignItems: 'center',
+						justifyContent: 'center',
+					}}>
+					{numberOfCharts.map((item, index) => {
+						const opacity = dotPosition.interpolate({
+							inputRange: [index - 1, index, index + 1],
+							outputRange: [0.3, 1, 0.3],
+							extrapolate: 'clamp',
+						});
+
+						const dotSize = dotPosition.interpolate({
+							inputRange: [index - 1, index, index + 1],
+							outputRange: [SIZES.base * 0.8, 10, SIZES.base * 0.8],
+							extrapolate: 'clamp',
+						});
+
+						const dotColor = dotPosition.interpolate({
+							inputRange: [index - 1, index, index + 1],
+							outputRange: [COLORS.gray, COLORS.primary, COLORS.gray],
+							extrapolate: 'clamp',
+						});
+
+						return (
+							<Animated.View
+								key={`dot-${index}`}
+								opacity={opacity}
+								style={{
+									borderRadius: SIZES.radius,
+									marginHorizontal: 6,
+									width: dotSize,
+									height: dotSize,
+									backgroundColor: dotColor,
+								}}
+							/>
+						);
+					})}
+				</View>
+			</View>
+		);
+	}
+
+	function renderBuy() {
+		return (
+			<View
+				style={{
+					marginTop: SIZES.padding,
+					marginHorizontal: SIZES.radius,
+					padding: SIZES.radius,
+					borderRadius: SIZES.radius,
+					backgroundColor: COLORS.white,
+					...styles.shadow,
+				}}>
+				<View
+					style={{
+						flexDirection: 'row',
+						alignItems: 'center',
+						marginBottom: SIZES.radius,
+					}}>
+					{/* Currency */}
+					<View style={{ flex: 1 }}>
+						<CurrencyLabel
+							icon={selectedCurrency?.image}
+							currency={`${selectedCurrency?.currency} Wallet`}
+							code={selectedCurrency?.code}
+						/>
+					</View>
+
+					{/* Amount */}
+					<View style={{ flexDirection: 'row', alignItems: 'center' }}>
+						<View style={{ marginRight: SIZES.base }}>
+							<Text style={{ ...FONTS.h3 }}>
+								${selectedCurrency?.wallet.value}
+							</Text>
+							<Text
+								style={{
+									textAlign: 'right',
+									color: COLORS.gray,
+									...FONTS.body4,
+								}}>
+								{selectedCurrency?.wallet.crypto} {selectedCurrency?.code}
+							</Text>
+						</View>
+						<Image
+							source={icons.right_arrow}
+							resizeMode='cover'
+							style={{ width: 20, height: 20, tintColor: COLORS.gray }}
+						/>
+					</View>
+				</View>
+
+				<TextButton
+					label='Buy'
+					onPress={() =>
+						navigation.navigate('Transaction', { currency: selectedCurrency })
+					}
+				/>
+			</View>
+		);
+	}
+
+	function renderAbout() {
+		return (
+			<View
+				style={{
+					marginTop: SIZES.padding,
+					marginHorizontal: SIZES.radius,
+					padding: SIZES.radius,
+					borderRadius: SIZES.radius,
+					backgroundColor: COLORS.white,
+					...styles.shadow,
+				}}>
+				<Text style={{ ...FONTS.h3 }}>About {selectedCurrency?.currency}</Text>
+				<Text style={{ marginTop: SIZES.base, ...FONTS.body3 }}>
+					{selectedCurrency?.description}
+				</Text>
+			</View>
+		);
+	}
+
 	function renderChart() {
 		return (
 			<View
@@ -44,7 +180,12 @@ const CryptoDetail = ({ route, navigation }) => {
 					...styles.shadow,
 				}}>
 				{/* Header */}
-				<View style={{ flexDirection: 'row', marginTop: SIZES.padding }}>
+				<View
+					style={{
+						flexDirection: 'row',
+						marginTop: SIZES.padding,
+						width: '92%',
+					}}>
 					<View style={{ flex: 1 }}>
 						<CurrencyLabel
 							icon={selectedCurrency?.image}
@@ -126,7 +267,39 @@ const CryptoDetail = ({ route, navigation }) => {
 				</Animated.ScrollView>
 
 				{/* Options */}
+				<View
+					style={{
+						width: '100%',
+						paddingHorizontal: SIZES.padding,
+						flexDirection: 'row',
+						justifyContent: 'space-between',
+					}}>
+					{chartOptions.map((option) => {
+						return (
+							<TextButton
+								key={`option-${option.id}`}
+								label={option.label}
+								customContainerStyle={{
+									height: 30,
+									width: 60,
+									borderRadius: 15,
+									backgroundColor:
+										selectedOption.id == option.id
+											? COLORS.primary
+											: COLORS.lightGray,
+								}}
+								customLabelStyle={{
+									color:
+										selectedOption.id == option.id ? COLORS.white : COLORS.gray,
+									...FONTS.body5,
+								}}
+								onPress={() => optionOnClickHandler(option)}></TextButton>
+						);
+					})}
+				</View>
+
 				{/* Dots */}
+				{renderDots()}
 			</View>
 		);
 	}
@@ -137,6 +310,14 @@ const CryptoDetail = ({ route, navigation }) => {
 			<ScrollView>
 				<View style={{ flex: 1, paddingBottom: SIZES.padding }}>
 					{renderChart()}
+					{renderBuy()}
+					{renderAbout()}
+					<PriceAlert
+						customContainerStyle={{
+							marginTop: SIZES.padding,
+							marginHorizontal: SIZES.radius,
+						}}
+					/>
 				</View>
 			</ScrollView>
 		</SafeAreaView>

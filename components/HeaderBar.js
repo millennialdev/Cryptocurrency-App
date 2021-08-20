@@ -7,7 +7,13 @@ const HeaderBar = ({ right }) => {
 	const navigation = useNavigation();
 
 	return (
-		<View style={{ paddingHorizontal: SIZES.padding, flexDirection: 'row' }}>
+		<View
+			style={{
+				paddingHorizontal: SIZES.padding,
+				alignItems: 'center',
+				flexDirection: 'row',
+				height: 40,
+			}}>
 			<View style={{ flex: 1, alignItems: 'flex-start' }}>
 				<TouchableOpacity
 					style={{ flexDirection: 'row', alignItems: 'center' }}
